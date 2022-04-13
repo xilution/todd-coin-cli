@@ -1,17 +1,36 @@
 {
-  "name": "todd-coin",
-  "description": "The Todd Coin Cryptocurrency",
+  "name": "@xilution/todd-coin-cli",
+  "version": "1.0.1",
+  "description": "The Todd Coin Cryptocurrency CLI",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "tag": "latest"
+  },
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf ./dist",
     "format": "prettier --write .",
     "watch": "nodemon --watch src -e ts --exec \"npm run build\"",
-    "verify": "echo \"nothing to do yet\""
+    "verify": "echo \"nothing to do yet\"",
+    "release": "npm publish"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xilution/todd-coin-cli"
+  },
+  "bugs": {
+    "url": "https://github.com/xilution/todd-coin-cli/issues"
+  },
+  "homepage": "https://github.com/xilution/todd-coin-cli",
+  "files": [
+    "dist",
+    "src"
+  ],
   "bin": {
     "todd-coin": "./dist/cli.js"
   },
-  "main": "dist/cli.js",
+  "main": "./dist/cli.js",
+  "types": "dist/index.d.ts",
   "dependencies": {
     "@xilution/todd-coin-constants": "^1.0.3",
     "@xilution/todd-coin-utils": "^1.0.3",
@@ -28,5 +47,8 @@
     "nodemon": "^2.0.15",
     "prettier": "^2.5.1",
     "typescript": "^4.6.2"
-  }
+  },
+  "author": "Todd Brunia <tbrunia@gmail.com> (http://www.github.com/tbrunia)",
+  "license": "MIT",
+  "private": false
 }

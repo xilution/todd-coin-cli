@@ -1,4 +1,8 @@
-# todd-coin
+# todd-coin-cli
+
+Todd Coin is a Cryptocurrency for Good.
+
+These is the Todd Coin CLI.
 
 ## First Things First
 

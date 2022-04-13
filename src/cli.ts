@@ -2,7 +2,11 @@
 
 import yargs, { ArgumentsCamelCase } from "yargs";
 import { hideBin } from "yargs/helpers";
-import {blockUtils, blockchainUtils, transactionUtils} from "@xilution/todd-coin-utils";
+import {
+  blockUtils,
+  blockchainUtils,
+  transactionUtils,
+} from "@xilution/todd-coin-utils";
 import { ApiData, Block, Participant, Transaction } from "./types";
 import axios, { AxiosResponse } from "axios";
 import _ from "lodash";
