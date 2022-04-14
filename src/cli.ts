@@ -44,12 +44,12 @@ const getBlocks = async (): Promise<Block[]> => {
 
   return (await Promise.all(
     blocksResponse.data.data.map(async (blockData: ApiData<Block>) => {
-      const transactions = await getBlockTransactions(blockData);
+      const transactions: Transaction[] = await getBlockTransactions(blockData);
 
       return {
+        ...blockData.attributes,
         id: blockData.id,
         transactions,
-        ...blockData.attributes,
       };
     })
   )) as Block[];
@@ -129,16 +129,21 @@ yargs(hideBin(process.argv))
     "mine next todd-coin block",
     () => {},
     async () => {
-      const latestBlock: Block = _.last(await getBlocks());
-      const signedTransactions: Transaction[] =
-        await getSomeSignedTransactionsToMine();
-      const newBlock: Block = blockUtils.mineNextBlock(
-        latestBlock,
-        new Date().toISOString(),
-        signedTransactions
-      );
+      const latestBlock: Block | undefined = _.last(await getBlocks()); // todo - this is super inefficient
 
-      console.log(JSON.stringify(newBlock, null, 2));
+        if (latestBlock === undefined) {
+            console.log("Unable to mine because, the latest block was not found.");
+            return;
+        }
+
+        const signedTransactions: Transaction[] =
+            await getSomeSignedTransactionsToMine();
+        const newBlock: Block = blockUtils.mineNextBlock(
+            latestBlock,
+            new Date().toISOString(),
+            signedTransactions
+        );
+        console.log(JSON.stringify(newBlock, null, 2));
     }
   )
   .command(
