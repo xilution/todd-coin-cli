@@ -2,7 +2,7 @@
 
 Todd Coin is a Cryptocurrency for Good.
 
-These is the Todd Coin CLI.
+This is the Todd Coin CLI.
 
 ## First Things First
 
