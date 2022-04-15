@@ -8,11 +8,13 @@
   },
   "scripts": {
     "build": "tsc",
-    "clean": "rm -rf ./dist",
+    "clean": "rm -rf ./coverage ./dist",
     "format": "prettier --write .",
     "watch": "nodemon --watch src -e ts --exec \"npm run build\"",
-    "verify": "echo \"nothing to do yet\"",
-    "release": "npm publish"
+    "verify": "prettier --check . && eslint . --ext .js,.ts && npm run test && npm run build",
+    "semantic-release": "semantic-release",
+    "test": "jest ./test",
+    "prepare": "husky install"
   },
   "repository": {
     "type": "git",
@@ -27,27 +29,41 @@
     "src"
   ],
   "bin": {
-    "todd-coin": "./dist/cli.js"
+    "todd-coin": "./dist/index.js"
   },
-  "main": "./dist/cli.js",
+  "main": "./dist/index.js",
   "types": "dist/index.d.ts",
   "dependencies": {
-    "@xilution/todd-coin-constants": "^1.0.3",
-    "@xilution/todd-coin-utils": "^1.0.3",
+    "@xilution/todd-coin-constants": "^1.1.0",
+    "@xilution/todd-coin-types": "^1.1.0",
+    "@xilution/todd-coin-utils": "^1.1.1",
     "axios": "^0.26.1",
     "lodash": "^4.17.21",
     "uuid": "^8.3.2",
     "yargs": "^17.3.1"
   },
   "devDependencies": {
+    "@babel/preset-env": "^7.16.11",
+    "@babel/preset-typescript": "^7.16.7",
+    "@commitlint/cli": "^16.2.3",
+    "@commitlint/config-conventional": "^16.2.1",
+    "@semantic-release/changelog": "^6.0.1",
+    "@semantic-release/git": "^10.0.1",
     "@types/elliptic": "^6.4.14",
+    "@types/jest": "^27.4.1",
     "@types/lodash": "^4.14.181",
     "@types/node": "^17.0.23",
     "@types/uuid": "^8.3.4",
     "@types/yargs": "^17.0.9",
+    "@typescript-eslint/eslint-plugin": "^5.19.0",
+    "@typescript-eslint/parser": "^5.19.0",
+    "eslint": "^8.13.0",
+    "husky": "^7.0.4",
+    "jest": "^27.5.1",
     "nodemon": "^2.0.15",
     "prettier": "^2.5.1",
-    "typescript": "^4.6.2"
+    "semantic-release": "^19.0.2",
+    "typescript": "^4.6.3"
   },
   "author": "Todd Brunia <tbrunia@gmail.com> (http://www.github.com/tbrunia)",
   "license": "MIT",

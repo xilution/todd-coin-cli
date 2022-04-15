@@ -25,7 +25,3 @@ Hot rebuild when `src` changes
 ## To See todd-coin CLI Commands and Options
 
 `npm run build && todd-coin`
-
-## To Release
-
-`npm run release`
