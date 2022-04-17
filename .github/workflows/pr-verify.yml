@@ -1,13 +1,11 @@
-name: Release
+name: Pull Request Verify
 
 on:
-  push:
-    branches: [ main ]
+  pull_request:
+    types: [ opened, reopened ]
 
 env:
   NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-  GH_TOKEN: ${{ secrets.GH_TOKEN }}
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
   build:
@@ -20,9 +18,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          persist-credentials: false
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
@@ -32,7 +27,3 @@ jobs:
         run: npm ci
       - name: Verify
         run: npm run verify
-      - name: Build
-        run: npm run build
-      - name: Release
-        run: npm run semantic-release
