@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/xilution/todd-coin-cli/compare/v1.1.0...v1.2.0) (2022-05-04)
+
+
+### Features
+
+* updated deps ([b1ca519](https://github.com/xilution/todd-coin-cli/commit/b1ca519d5fab755e9dae47a4f18ed46e2cecc7f7))
+
 # [1.1.0](https://github.com/xilution/todd-coin-cli/compare/v1.0.1...v1.1.0) (2022-04-15)
 
 
