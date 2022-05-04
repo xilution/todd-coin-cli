@@ -20,7 +20,7 @@ import {
   Participant,
   PendingTransaction,
   SignedTransaction,
-  TransactionDetails
+  TransactionDetails,
 } from "@xilution/todd-coin-types";
 
 const getBlockTransactions = async (
@@ -52,10 +52,8 @@ const getBlocks = async (baseUrl: string): Promise<Block[]> => {
 
   return (await Promise.all(
     blocksResponse.data.data.map(async (blockData: ApiData<Block>) => {
-      const transactions: BlockTransaction<TransactionDetails>[] = await getBlockTransactions(
-        baseUrl,
-        blockData
-      );
+      const transactions: BlockTransaction<TransactionDetails>[] =
+        await getBlockTransactions(baseUrl, blockData);
 
       return {
         ...blockData.attributes,
@@ -133,15 +131,14 @@ export const cli = () =>
         const privateKey = args.privateKey as string;
         const goodPoints = args.goodPoints as number;
         const pendingTransactionId = args.pendingTransactionId as string;
-        const pendingTransaction: PendingTransaction<TransactionDetails> = await getPendingTransactionById(
-          baseUrl,
-          pendingTransactionId
-        );
-        const signedTransaction: SignedTransaction<TransactionDetails> = transactionUtils.signTransaction(
-          pendingTransaction,
-          goodPoints,
-          privateKey
-        );
+        const pendingTransaction: PendingTransaction<TransactionDetails> =
+          await getPendingTransactionById(baseUrl, pendingTransactionId);
+        const signedTransaction: SignedTransaction<TransactionDetails> =
+          transactionUtils.signTransaction(
+            pendingTransaction,
+            goodPoints,
+            privateKey
+          );
 
         console.log(JSON.stringify(signedTransaction, null, 2));
       }
