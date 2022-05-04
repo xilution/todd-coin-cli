@@ -4,6 +4,7 @@ import {
   blockUtils,
   blockchainUtils,
   transactionUtils,
+  participantUtils,
 } from "@xilution/todd-coin-utils";
 import { ApiData } from "./types";
 import axios, { AxiosResponse } from "axios";
@@ -13,24 +14,31 @@ import {
   FIRST_PAGE,
   MAX_TRANSACTIONS_PER_BLOCK,
 } from "@xilution/todd-coin-constants";
-import { Block, Participant, Transaction } from "@xilution/todd-coin-types";
+import {
+  Block,
+  BlockTransaction,
+  Participant,
+  PendingTransaction,
+  SignedTransaction,
+  TransactionDetails
+} from "@xilution/todd-coin-types";
 
 const getBlockTransactions = async (
   baseUrl: string,
   blockData: ApiData<Block>
-): Promise<Transaction[]> => {
+): Promise<BlockTransaction<TransactionDetails>[]> => {
   const transactionsResponse: AxiosResponse<{
-    data: ApiData<Transaction>[];
+    data: ApiData<BlockTransaction<TransactionDetails>>[];
   }> = await axios.get(
     `${baseUrl}/blocks/${blockData.id}/transactions?page[number]=${FIRST_PAGE}&page[size]=${MAX_TRANSACTIONS_PER_BLOCK}`
   );
 
   return transactionsResponse.data.data.map(
-    (transactionData: ApiData<Transaction>) => ({
+    (transactionData: ApiData<BlockTransaction<TransactionDetails>>) => ({
       id: transactionData.id,
       ...transactionData.attributes,
     })
-  ) as Transaction[];
+  ) as BlockTransaction<TransactionDetails>[];
 };
 
 // todo - paginate blocks
@@ -44,7 +52,7 @@ const getBlocks = async (baseUrl: string): Promise<Block[]> => {
 
   return (await Promise.all(
     blocksResponse.data.data.map(async (blockData: ApiData<Block>) => {
-      const transactions: Transaction[] = await getBlockTransactions(
+      const transactions: BlockTransaction<TransactionDetails>[] = await getBlockTransactions(
         baseUrl,
         blockData
       );
@@ -72,25 +80,27 @@ const getParticipantById = async (
 
 const getSomeSignedTransactionsToMine = async (
   baseUrl: string
-): Promise<Transaction[]> => {
+): Promise<SignedTransaction<TransactionDetails>[]> => {
   const signedTransactionsResponse: AxiosResponse<{
-    data: ApiData<Transaction>[];
+    data: ApiData<SignedTransaction<TransactionDetails>>[];
   }> = await axios.get(
-    `${baseUrl}/signed-transactions?page[number]=0&page[size]=${MAX_TRANSACTIONS_PER_BLOCK}`
+    `${baseUrl}/signed-transactions?page[number]=0&page[size]=${DEFAULT_PAGE_SIZE}`
   );
   return signedTransactionsResponse.data.data.map(
-    (data: ApiData<Transaction>) => ({
+    (data: ApiData<SignedTransaction<TransactionDetails>>) => ({
       id: data.id,
       ...data.attributes,
     })
-  ) as Transaction[];
+  ) as SignedTransaction<TransactionDetails>[];
 };
 
 const getPendingTransactionById = async (
   baseUrl: string,
   pendingTransactionId: string
-): Promise<Transaction> => {
-  const pendingTransactionResponse = await axios.get(
+): Promise<PendingTransaction<TransactionDetails>> => {
+  const pendingTransactionResponse: AxiosResponse<{
+    data: ApiData<PendingTransaction<TransactionDetails>>;
+  }> = await axios.get(
     `${baseUrl}/pending-transactions/${pendingTransactionId}`
   );
   return {
@@ -108,7 +118,7 @@ const getPendingTransactionById = async (
 export const cli = () =>
   yargs(hideBin(process.argv))
     .command(
-      "sign-pending-transaction <baseUrl> <privateKey> <pendingTransactionId>",
+      "sign-pending-transaction <baseUrl> <goodPoints> <privateKey> <pendingTransactionId>",
       "sign a pending todd-coin transaction",
       // eslint-disable-next-line @typescript-eslint/no-empty-function
       () => {},
@@ -121,13 +131,15 @@ export const cli = () =>
       ) => {
         const baseUrl = args.baseUrl as string;
         const privateKey = args.privateKey as string;
+        const goodPoints = args.goodPoints as number;
         const pendingTransactionId = args.pendingTransactionId as string;
-        const pendingTransaction: Transaction = await getPendingTransactionById(
+        const pendingTransaction: PendingTransaction<TransactionDetails> = await getPendingTransactionById(
           baseUrl,
           pendingTransactionId
         );
-        const signedTransaction: Transaction = transactionUtils.signTransaction(
+        const signedTransaction: SignedTransaction<TransactionDetails> = transactionUtils.signTransaction(
           pendingTransaction,
+          goodPoints,
           privateKey
         );
 
@@ -154,11 +166,10 @@ export const cli = () =>
           return;
         }
 
-        const signedTransactions: Transaction[] =
+        const signedTransactions: SignedTransaction<TransactionDetails>[] =
           await getSomeSignedTransactionsToMine(baseUrl);
-        const newBlock: Block = blockUtils.mineNextBlock(
+        const newBlock: Block = blockUtils.mineNewBlock(
           latestBlock,
-          new Date().toISOString(),
           signedTransactions
         );
         console.log(JSON.stringify(newBlock, null, 2));
@@ -201,9 +212,9 @@ export const cli = () =>
           participantId
         );
         const blocks: Block[] = await getBlocks(baseUrl);
-        const balance: number = blockchainUtils.getParticipantBalance(
-          blocks,
-          participant.key.public
+        const balance: number = participantUtils.calculateAccumulatedGoodPoints(
+          participant,
+          blocks
         );
 
         console.log(`balance: ${balance}`);

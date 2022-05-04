@@ -34,9 +34,9 @@
   "main": "./dist/index.js",
   "types": "dist/index.d.ts",
   "dependencies": {
-    "@xilution/todd-coin-constants": "^1.1.0",
-    "@xilution/todd-coin-types": "^1.1.0",
-    "@xilution/todd-coin-utils": "^1.1.1",
+    "@xilution/todd-coin-constants": "^2.0.0",
+    "@xilution/todd-coin-types": "^2.2.2",
+    "@xilution/todd-coin-utils": "^5.3.1",
     "axios": "^0.26.1",
     "lodash": "^4.17.21",
     "uuid": "^8.3.2",
