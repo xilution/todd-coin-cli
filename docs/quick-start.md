@@ -18,16 +18,16 @@
 18. env | grep TODD_COIN
 19. todd-coin create-pending-transaction $TODD_COIN_API_BASE_URL $TODD_COIN_ACCESS_TOKEN "just cause" $TODD_COIN_PARTICIPANT_1_ID $TODD_COIN_PARTICIPANT_1_ID $TODD_COIN_FROM_DATE $TODD_COIN_TO_DATE > ~/.todd-coin/quick-start/pending-transaction-1.json && cat ~/.todd-coin/quick-start/pending-transaction-1.json
 20. export TODD_COIN_PENDING_TRANSACTION_1_ID=`cat ~/.todd-coin/quick-start/pending-transaction-1.json | jq '.id' -r`
+21. docker run --name todd-coin-tasks -e OPERATION=VALIDATE docker.io/xilution/todd-coin-tasks:latest
+22. todd-coin sign-pending-transaction $TODD_COIN_API_BASE_URL $TODD_COIN_ACCESS_TOKEN 10 $TODD_COIN_PARTICIPANT_1_PRIVATE_KEY $TODD_COIN_PENDING_TRANSACTION_1_ID > ~/.todd-coin/quick-start/signed-transaction-1.json && cat ~/.todd-coin/quick-start/signed-transaction-1.json
 23. docker run --name todd-coin-tasks -e OPERATION=VALIDATE docker.io/xilution/todd-coin-tasks:latest
-21. todd-coin sign-pending-transaction $TODD_COIN_API_BASE_URL $TODD_COIN_ACCESS_TOKEN 10 $TODD_COIN_PARTICIPANT_1_PRIVATE_KEY $TODD_COIN_PENDING_TRANSACTION_1_ID > ~/.todd-coin/quick-start/signed-transaction-1.json && cat ~/.todd-coin/quick-start/signed-transaction-1.json
-23. docker run --name todd-coin-tasks -e OPERATION=VALIDATE docker.io/xilution/todd-coin-tasks:latest
-22. docker run -e OPERATION=MINE docker.io/xilution/todd-coin-tasks:latest
-23. docker run --name todd-coin-tasks -e OPERATION=VALIDATE docker.io/xilution/todd-coin-tasks:latest
-24. docker run -e OPERATION=SYNC docker.io/xilution/todd-coin-tasks:latest
+24. docker run -e OPERATION=MINE docker.io/xilution/todd-coin-tasks:latest
 25. docker run --name todd-coin-tasks -e OPERATION=VALIDATE docker.io/xilution/todd-coin-tasks:latest
-26. rm -rf ~/.todd-coin/quick-start
-27. docker stop todd-coin-db todd-coin-api
-28. docker rm todd-coin-db todd-coin-tasks todd-coin-api
+26. docker run -e OPERATION=SYNC docker.io/xilution/todd-coin-tasks:latest
+27. docker run --name todd-coin-tasks -e OPERATION=VALIDATE docker.io/xilution/todd-coin-tasks:latest
+28. rm -rf ~/.todd-coin/quick-start
+29. docker stop todd-coin-db todd-coin-api
+30. docker rm todd-coin-db todd-coin-tasks todd-coin-api
 
 participant 1 is a member of a charity
 participant 2 is a volunteer
