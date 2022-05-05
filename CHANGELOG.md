@@ -1,3 +1,11 @@
+# [1.3.0](https://github.com/xilution/todd-coin-cli/compare/v1.2.0...v1.3.0) (2022-05-05)
+
+
+### Features
+
+* bumped todd-coin-types and todd-coin-utils ([034fbd6](https://github.com/xilution/todd-coin-cli/commit/034fbd69b12d1e7ce81ba08c878a5532a7a9a22f))
+* updated commands ([df18d58](https://github.com/xilution/todd-coin-cli/commit/df18d58816d0e95a2ba453da90e10389d86503a0))
+
 # [1.2.0](https://github.com/xilution/todd-coin-cli/compare/v1.1.0...v1.2.0) (2022-05-04)
 
 
