@@ -1,5 +1,8 @@
 export interface ApiData<T> {
   id: string;
   attributes: Omit<T, "id">;
-  relationships: Record<string, ApiData<unknown> | Array<ApiData<unknown>>>;
+  relationships: Record<
+    string,
+    { data: ApiData<unknown> | Array<ApiData<unknown>> }
+  >;
 }
