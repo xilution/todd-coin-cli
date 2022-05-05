@@ -40,7 +40,7 @@
 participant 1 is a member of a charity
 participant 2 is a volunteer
 
-need to create a node, an organization, an org/participant reference, 
+need to create a node, an organization, an org/participant reference,
 
 in the mobile app, when a volunteer creates a pending transaction, they should be able to look up a participant by their email address
 the volunteer can create an unclaimed participant with the email address
