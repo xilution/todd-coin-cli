@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/xilution/todd-coin-cli/compare/v1.3.0...v1.4.0) (2022-05-09)
+
+
+### Features
+
+* added generate key operation ([efa5e33](https://github.com/xilution/todd-coin-cli/commit/efa5e337f34c3623f13c243ed4e6816bb5bb0886))
+
 # [1.3.0](https://github.com/xilution/todd-coin-cli/compare/v1.2.0...v1.3.0) (2022-05-05)
 
 
