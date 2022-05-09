@@ -35,8 +35,7 @@
   "types": "dist/index.d.ts",
   "dependencies": {
     "@xilution/todd-coin-constants": "^2.0.0",
-    "@xilution/todd-coin-types": "^2.3.0",
-    "@xilution/todd-coin-utils": "^5.4.0",
+    "@xilution/todd-coin-utils": "^7.0.1",
     "axios": "^0.26.1",
     "lodash": "^4.17.21",
     "uuid": "^8.3.2",
@@ -57,6 +56,7 @@
     "@types/yargs": "^17.0.9",
     "@typescript-eslint/eslint-plugin": "^5.19.0",
     "@typescript-eslint/parser": "^5.19.0",
+    "@xilution/todd-coin-types": "^4.0.0",
     "eslint": "^8.13.0",
     "husky": "^7.0.4",
     "jest": "^27.5.1",

@@ -172,6 +172,28 @@ const getParticipantById = async (
   } as Participant;
 };
 
+const getParticipantKeyById = async (
+  baseUrl: string,
+  accessToken: string,
+  participantId: string,
+  participantKeyId: string
+): Promise<ParticipantKey> => {
+  const response: AxiosResponse<{ data: ApiData<ParticipantKey> }> =
+    await axios.get(
+      `${baseUrl}/participants/${participantId}/keys/${participantKeyId}`,
+      {
+        headers: {
+          authorization: `bearer ${accessToken}`,
+        },
+      }
+    );
+
+  return {
+    id: response.data.data.id,
+    ...response.data.data.attributes,
+  } as ParticipantKey;
+};
+
 const createParticipantKey = async (
   baseUrl: string,
   accessToken: string,
@@ -298,8 +320,8 @@ const getPendingTransactionById = async (
   return {
     id: response.data.data.id,
     ...response.data.data.attributes,
-    from: fromParticipant,
-    to: toParticipant,
+    fromParticipant,
+    toParticipant,
   };
 };
 
@@ -327,13 +349,13 @@ const createSignedTransaction = async (
           from: {
             data: {
               type: "participant",
-              id: signedTransaction.from?.id,
+              id: signedTransaction.fromParticipant?.id,
             },
           },
           to: {
             data: {
               type: "participant",
-              id: signedTransaction.to.id,
+              id: signedTransaction.toParticipant?.id,
             },
           },
         },
@@ -445,6 +467,26 @@ export const cli = () =>
       }
     )
     .command(
+      "generate-key",
+      "generate a todd-coin participant key",
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      () => {},
+      async () => {
+        try {
+          const participantKey: ParticipantKey =
+            keyUtils.generateParticipantKey();
+
+          console.log(JSON.stringify(participantKey, null, 2));
+        } catch (error) {
+          if (axios.isAxiosError(error)) {
+            console.error((error as AxiosError).response?.data);
+          } else {
+            console.error((error as Error).message);
+          }
+        }
+      }
+    )
+    .command(
       "create-pending-transaction <baseUrl> <accessToken> <description> <fromParticipantId> <toParticipantId> <fromTime> <toTime>",
       "create a pending todd-coin transaction",
       // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -491,7 +533,7 @@ export const cli = () =>
       }
     )
     .command(
-      "sign-pending-transaction <baseUrl> <accessToken> <goodPoints> <privateKey> <pendingTransactionId>",
+      "sign-pending-transaction <baseUrl> <accessToken> <goodPoints> <participantId> <participantKeyId> <privateKey> <pendingTransactionId>",
       "sign a pending todd-coin transaction",
       // eslint-disable-next-line @typescript-eslint/no-empty-function
       () => {},
@@ -499,6 +541,7 @@ export const cli = () =>
         args: ArgumentsCamelCase<{
           baseUrl: string;
           accessToken: string;
+          participantKeyId: string;
           privateKey: string;
           pendingTransactionId: string;
         }>
@@ -506,6 +549,8 @@ export const cli = () =>
         try {
           const baseUrl = args.baseUrl as string;
           const accessToken = args.accessToken as string;
+          const participantId = args.participantId as string;
+          const participantKeyId = args.participantKeyId as string;
           const privateKey = args.privateKey as string;
           const goodPoints = args.goodPoints as number;
           const pendingTransactionId = args.pendingTransactionId as string;
@@ -517,10 +562,24 @@ export const cli = () =>
               pendingTransactionId
             );
 
+          const participant: Participant = await getParticipantById(
+            baseUrl,
+            accessToken,
+            participantId
+          );
+
+          const participantKey: ParticipantKey = await getParticipantKeyById(
+            baseUrl,
+            accessToken,
+            participant.id as string,
+            participantKeyId
+          );
+
           const signedTransaction: SignedTransaction<TransactionDetails> =
             transactionUtils.signTransaction(
               pendingTransaction,
               goodPoints,
+              participantKey,
               privateKey
             );
 
