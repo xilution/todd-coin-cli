@@ -6,14 +6,14 @@
 4. docker run --rm --name todd-coin-tasks -e OPERATION=INIT -e DB_HOST=host.docker.internal docker.io/xilution/todd-coin-tasks:latest
 5. docker run --rm --name todd-coin-tasks -e OPERATION=VALIDATE -e DB_HOST=host.docker.internal docker.io/xilution/todd-coin-tasks:latest
 6. docker run --rm --name todd-coin-tasks -e OPERATION=SYNC -e DB_HOST=host.docker.internal docker.io/xilution/todd-coin-tasks:latest
-7. docker run --rm --name todd-coin-tasks -e OPERATION=VALIDATE -e DB_HOST=host.docker.internal docker.io/xilution/todd-coin-tasks:latest 
+7. docker run --rm --name todd-coin-tasks -e OPERATION=VALIDATE -e DB_HOST=host.docker.internal docker.io/xilution/todd-coin-tasks:latest
 8. docker run --rm --name todd-coin-tasks -e OPERATION=MINE -e DB_HOST=host.docker.internal docker.io/xilution/todd-coin-tasks:latest
 9. docker run --name todd-coin-api -e DB_HOST=host.docker.internal -p 3000:3000 -d docker.io/xilution/todd-coin-api:latest
 10. docker logs -f todd-coin-api
     1. wait for "Listening on 0.0.0.0:3000"
     2. ctrl-c to exit
-12. open http://localhost:3000/documentation
-11. mkdir -p ~/.todd-coin/quick-start
+11. open http://localhost:3000/documentation
+12. mkdir -p ~/.todd-coin/quick-start
 13. npm i -g @xilution/todd-coin-cli@latest
 14. todd-coin create-participant $TODD_COIN_API_BASE_URL jdoe1@example.com secret > ~/.todd-coin/quick-start/participant-1.json && cat ~/.todd-coin/quick-start/participant-1.json
 15. export TODD_COIN_PARTICIPANT_1_ID=`cat ~/.todd-coin/quick-start/participant-1.json | jq '.id' -r`
