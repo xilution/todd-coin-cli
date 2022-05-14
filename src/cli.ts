@@ -2,9 +2,9 @@ import yargs, { ArgumentsCamelCase } from "yargs";
 import { hideBin } from "yargs/helpers";
 import {
   blockchainUtils,
-  transactionUtils,
-  participantUtils,
   keyUtils,
+  participantUtils,
+  transactionUtils,
 } from "@xilution/todd-coin-utils";
 import { ApiData } from "./types";
 import axios, { AxiosError, AxiosResponse } from "axios";
@@ -12,11 +12,13 @@ import { DEFAULT_PAGE_SIZE, FIRST_PAGE } from "@xilution/todd-coin-constants";
 import {
   Block,
   BlockTransaction,
+  Organization,
   Participant,
   ParticipantKey,
   PendingTransaction,
   SignedTransaction,
   TransactionDetails,
+  TransactionType,
 } from "@xilution/todd-coin-types";
 
 type AccessToken = { access: string };
@@ -154,6 +156,108 @@ const createParticipant = async (
   } as Participant;
 };
 
+const createOrganization = async (
+  baseUrl: string,
+  accessToken: string,
+  name: string
+): Promise<Organization> => {
+  const response: AxiosResponse<{ data: ApiData<Organization> }> =
+    await axios.post(
+      `${baseUrl}/organizations`,
+      {
+        data: {
+          type: "organization",
+          attributes: {
+            name,
+            roles: ["CHARITY"],
+          },
+        },
+      },
+      {
+        headers: {
+          authorization: `bearer ${accessToken}`,
+        },
+      }
+    );
+
+  return {
+    id: response.data.data.id,
+    ...response.data.data.attributes,
+  } as Organization;
+};
+
+const createOrganizationParticipantReference = async (
+  baseUrl: string,
+  accessToken: string,
+  organizationId: string,
+  participantId: string
+): Promise<void> => {
+  await axios.post(
+    `${baseUrl}/organizations/${organizationId}/relationships/participants`,
+    {
+      data: [
+        {
+          type: "participant",
+          id: participantId,
+        },
+      ],
+    },
+    {
+      headers: {
+        authorization: `bearer ${accessToken}`,
+      },
+    }
+  );
+};
+
+const createOrganizationAuthorizedSignerReference = async (
+  baseUrl: string,
+  accessToken: string,
+  organizationId: string,
+  authorizedSignerId: string
+): Promise<void> => {
+  await axios.post(
+    `${baseUrl}/organizations/${organizationId}/relationships/authorized-signers`,
+    {
+      data: [
+        {
+          type: "participant",
+          id: authorizedSignerId,
+        },
+      ],
+    },
+    {
+      headers: {
+        authorization: `bearer ${accessToken}`,
+      },
+    }
+  );
+};
+
+const createOrganizationAdministratorReference = async (
+  baseUrl: string,
+  accessToken: string,
+  organizationId: string,
+  administratorId: string
+): Promise<void> => {
+  await axios.post(
+    `${baseUrl}/organizations/${organizationId}/relationships/administrators`,
+    {
+      data: [
+        {
+          type: "participant",
+          id: administratorId,
+        },
+      ],
+    },
+    {
+      headers: {
+        authorization: `bearer ${accessToken}`,
+      },
+    }
+  );
+};
+
 const getParticipantById = async (
   baseUrl: string,
   accessToken: string,
@@ -170,6 +274,24 @@ const getParticipantById = async (
     id: response.data.data.id,
     ...response.data.data.attributes,
   } as Participant;
+};
+
+const getOrganizationById = async (
+  baseUrl: string,
+  accessToken: string,
+  organizationId: string
+): Promise<Organization> => {
+  const response: AxiosResponse<{ data: ApiData<Organization> }> =
+    await axios.get(`${baseUrl}/organizations/${organizationId}`, {
+      headers: {
+        authorization: `bearer ${accessToken}`,
+      },
+    });
+
+  return {
+    id: response.data.data.id,
+    ...response.data.data.attributes,
+  } as Organization;
 };
 
 const getParticipantKeyById = async (
@@ -198,25 +320,17 @@ const createParticipantKey = async (
   baseUrl: string,
   accessToken: string,
   participant: Participant,
-  publicKey: string,
-  privateKey: string,
-  effectiveFrom: string,
-  effectiveTo: string
+  participantKey: ParticipantKey
 ): Promise<ParticipantKey> => {
+  const { id, ...attributes } = participantKey;
   const response: AxiosResponse<{ data: ApiData<ParticipantKey> }> =
     await axios.post(
       `${baseUrl}/participants/${participant.id}/keys`,
       {
         data: {
+          id,
           type: "participant-key",
-          attributes: {
-            public: publicKey,
-            private: privateKey,
-            effective: {
-              from: effectiveFrom,
-              to: effectiveTo,
-            },
-          },
+          attributes,
         },
       },
       {
@@ -235,53 +349,64 @@ const createParticipantKey = async (
 const createPendingTransaction = async (
   baseUrl: string,
   accessToken: string,
-  description: string,
-  fromParticipantId: string,
-  toParticipantId: string,
-  fromTime: string,
-  toTime: string
+  pendingTransaction: PendingTransaction<TransactionDetails>
 ): Promise<PendingTransaction<TransactionDetails>> => {
-  const response: AxiosResponse<{
-    data: ApiData<PendingTransaction<TransactionDetails>>;
-  }> = await axios.post(
-    `${baseUrl}/pending-transactions`,
-    {
-      data: {
-        type: "pending-transaction",
-        attributes: {
-          description,
-          type: "TIME",
-          details: {
-            dateRanges: [
-              {
-                from: fromTime,
-                to: toTime,
+  const {
+    id,
+    fromParticipant,
+    fromOrganization,
+    toParticipant,
+    toOrganization,
+    ...attributes
+  } = pendingTransaction;
+  const data = {
+    data: {
+      id,
+      type: "pending-transaction",
+      attributes,
+      relationships: {
+        fromParticipant: fromParticipant
+          ? {
+              data: {
+                type: "participant",
+                id: fromParticipant.id,
               },
-            ],
-          },
-        },
-        relationships: {
-          from: {
-            data: {
-              type: "participant",
-              id: fromParticipantId,
-            },
-          },
-          to: {
-            data: {
-              type: "participant",
-              id: toParticipantId,
-            },
-          },
-        },
+            }
+          : undefined,
+        fromOrganization: fromOrganization
+          ? {
+              data: {
+                type: "organization",
+                id: fromOrganization.id,
+              },
+            }
+          : undefined,
+        toParticipant: toParticipant
+          ? {
+              data: {
+                type: "participant",
+                id: toParticipant.id,
+              },
+            }
+          : undefined,
+        toOrganization: toOrganization
+          ? {
+              data: {
+                type: "organization",
+                id: toOrganization.id,
+              },
+            }
+          : undefined,
       },
     },
-    {
-      headers: {
-        authorization: `bearer ${accessToken}`,
-      },
-    }
-  );
+  };
+  const response: AxiosResponse<{
+    data: ApiData<PendingTransaction<TransactionDetails>>;
+  }> = await axios.post(`${baseUrl}/pending-transactions`, data, {
+    headers: {
+      authorization: `bearer ${accessToken}`,
+    },
+  });
 
   return {
     id: response.data.data.id,
@@ -305,23 +430,161 @@ const getPendingTransactionById = async (
     }
   );
 
-  const fromParticipant: Participant = await getParticipantById(
-    baseUrl,
-    accessToken,
-    (response.data.data.relationships.from.data as ApiData<Participant>).id
-  );
+  // todo - conditionally get if the id is defined
 
-  const toParticipant: Participant = await getParticipantById(
-    baseUrl,
-    accessToken,
-    (response.data.data.relationships.to.data as ApiData<Participant>).id
-  );
+  const fromParticipantId = (
+    response.data.data.relationships.fromParticipant
+      ?.data as ApiData<Participant>
+  )?.id;
+
+  let fromParticipant: Participant | undefined;
+
+  if (fromParticipantId) {
+    fromParticipant = await getParticipantById(
+      baseUrl,
+      accessToken,
+      fromParticipantId
+    );
+  }
+
+  const fromOrganizationId = (
+    response.data.data.relationships.fromOrganization
+      ?.data as ApiData<Organization>
+  )?.id;
+
+  let fromOrganization: Organization | undefined;
+
+  if (fromOrganizationId) {
+    fromOrganization = await getOrganizationById(
+      baseUrl,
+      accessToken,
+      fromOrganizationId
+    );
+  }
+
+  const toParticipantId = (
+    response.data.data.relationships.toParticipant?.data as ApiData<Participant>
+  )?.id;
+
+  let toParticipant: Participant | undefined;
+
+  if (toParticipantId) {
+    toParticipant = await getParticipantById(
+      baseUrl,
+      accessToken,
+      toParticipantId
+    );
+  }
+
+  const toOrganizationId = (
+    response.data.data.relationships.toOrganization
+      ?.data as ApiData<Organization>
+  )?.id;
+
+  let toOrganization: Organization | undefined;
+
+  if (toOrganizationId) {
+    toOrganization = await getOrganizationById(
+      baseUrl,
+      accessToken,
+      toOrganizationId
+    );
+  }
 
   return {
     id: response.data.data.id,
     ...response.data.data.attributes,
     fromParticipant,
+    fromOrganization,
     toParticipant,
+    toOrganization,
+  };
+};
+
+const getSignedTransactionById = async (
+  baseUrl: string,
+  accessToken: string,
+  signedTransactionId: string
+): Promise<SignedTransaction<TransactionDetails>> => {
+  const response: AxiosResponse<{
+    data: ApiData<SignedTransaction<TransactionDetails>>;
+  }> = await axios.get(
+    `${baseUrl}/signed-transactions/${signedTransactionId}`,
+    {
+      headers: {
+        authorization: `bearer ${accessToken}`,
+      },
+    }
+  );
+
+  // todo - conditionally get if the id is defined
+
+  const fromParticipantId = (
+    response.data.data.relationships.fromParticipant
+      ?.data as ApiData<Participant>
+  )?.id;
+
+  let fromParticipant: Participant | undefined;
+
+  if (fromParticipantId) {
+    fromParticipant = await getParticipantById(
+      baseUrl,
+      accessToken,
+      fromParticipantId
+    );
+  }
+
+  const fromOrganizationId = (
+    response.data.data.relationships.fromOrganization
+      ?.data as ApiData<Organization>
+  )?.id;
+
+  let fromOrganization: Organization | undefined;
+
+  if (fromOrganizationId) {
+    fromOrganization = await getOrganizationById(
+      baseUrl,
+      accessToken,
+      fromOrganizationId
+    );
+  }
+
+  const toParticipantId = (
+    response.data.data.relationships.toParticipant?.data as ApiData<Participant>
+  )?.id;
+
+  let toParticipant: Participant | undefined;
+
+  if (toParticipantId) {
+    toParticipant = await getParticipantById(
+      baseUrl,
+      accessToken,
+      toParticipantId
+    );
+  }
+
+  const toOrganizationId = (
+    response.data.data.relationships.toOrganization
+      ?.data as ApiData<Organization>
+  )?.id;
+
+  let toOrganization: Organization | undefined;
+
+  if (toOrganizationId) {
+    toOrganization = await getOrganizationById(
+      baseUrl,
+      accessToken,
+      toOrganizationId
+    );
+  }
+
+  return {
+    id: response.data.data.id,
+    ...response.data.data.attributes,
+    fromParticipant,
+    fromOrganization,
+    toParticipant,
+    toOrganization,
   };
 };
 
@@ -330,48 +593,70 @@ const createSignedTransaction = async (
   accessToken: string,
   signedTransaction: SignedTransaction<TransactionDetails>
 ): Promise<SignedTransaction<TransactionDetails>> => {
-  const response: AxiosResponse<{
-    data: ApiData<SignedTransaction<TransactionDetails>>;
-  }> = await axios.post(
-    `${baseUrl}/signed-transactions`,
-    {
-      data: {
-        type: "signed-transaction",
-        id: signedTransaction.id,
-        attributes: {
-          goodPoints: signedTransaction.goodPoints,
-          signature: signedTransaction.signature,
-          description: signedTransaction.description,
-          type: signedTransaction.type,
-          details: signedTransaction.details,
-        },
-        relationships: {
-          from: {
-            data: {
-              type: "participant",
-              id: signedTransaction.fromParticipant?.id,
-            },
-          },
-          to: {
-            data: {
-              type: "participant",
-              id: signedTransaction.toParticipant?.id,
-            },
+  const { id, participantKey, goodPoints, signature } = signedTransaction;
+
+  const data = {
+    data: {
+      id,
+      type: "signed-transaction",
+      attributes: {
+        goodPoints,
+        signature,
+      },
+      relationships: {
+        participantKey: {
+          data: {
+            type: "participant-key",
+            id: participantKey?.id,
           },
         },
       },
     },
-    {
-      headers: {
-        authorization: `bearer ${accessToken}`,
-      },
-    }
-  );
+  };
+  const response: AxiosResponse<{
+    data: ApiData<SignedTransaction<TransactionDetails>>;
+  }> = await axios.post(`${baseUrl}/signed-transactions`, data, {
+    headers: {
+      authorization: `bearer ${accessToken}`,
+    },
+  });
 
   return {
     id: response.data.data.id,
     ...response.data.data.attributes,
   } as SignedTransaction<TransactionDetails>;
+};
+
+const updateSignedTransaction = async (
+  baseUrl: string,
+  accessToken: string,
+  signedTransaction: SignedTransaction<TransactionDetails>
+): Promise<void> => {
+  const { id, participantKey, goodPoints, signature } = signedTransaction;
+
+  const data = {
+    data: {
+      id,
+      type: "signed-transaction",
+      attributes: {
+        goodPoints,
+        signature,
+      },
+      relationships: {
+        participantKey: {
+          data: {
+            type: "participant-key",
+            id: participantKey?.id,
+          },
+        },
+      },
+    },
+  };
+  await axios.patch(`${baseUrl}/signed-transactions/${id}`, data, {
+    headers: {
+      authorization: `bearer ${accessToken}`,
+    },
+  });
 };
 
 export const cli = () =>
@@ -393,7 +678,7 @@ export const cli = () =>
           const email = args.email as string;
           const password = args.password as string;
 
-          const participant: Participant = await createParticipant(
+          const createdParticipant: Participant = await createParticipant(
             baseUrl,
             email,
             password
@@ -405,26 +690,174 @@ export const cli = () =>
           );
           const participantKey: ParticipantKey =
             keyUtils.generateParticipantKey();
-          await createParticipantKey(
-            baseUrl,
-            accessToken.access,
-            participant,
-            participantKey.public,
-            participantKey.private as string,
-            participantKey.effective.from,
-            participantKey.effective.to
-          );
+          const createdParticipantKey: ParticipantKey =
+            await createParticipantKey(
+              baseUrl,
+              accessToken.access,
+              createdParticipant,
+              {
+                public: participantKey.public,
+                private: participantKey.private as string,
+                effective: {
+                  from: participantKey.effective.from,
+                  to: participantKey.effective.to,
+                },
+              }
+            );
 
           console.log(
             JSON.stringify(
               {
-                ...participant,
-                keys: [participantKey],
+                ...createdParticipant,
+                keys: [
+                  { ...createdParticipantKey, private: participantKey.private },
+                ],
               },
               null,
               2
             )
           );
+        } catch (error) {
+          if (axios.isAxiosError(error)) {
+            console.error((error as AxiosError).response?.data);
+          } else {
+            console.error((error as Error).message);
+          }
+        }
+      }
+    )
+    .command(
+      "create-organization <baseUrl> <accessToken> <name>",
+      "create a todd-coin organization",
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      () => {},
+      async (
+        args: ArgumentsCamelCase<{
+          baseUrl: string;
+          accessToken: string;
+          name: string;
+        }>
+      ) => {
+        try {
+          const baseUrl = args.baseUrl as string;
+          const accessToken = args.accessToken as string;
+          const name = args.name as string;
+
+          const organization: Organization = await createOrganization(
+            baseUrl,
+            accessToken,
+            name
+          );
+
+          console.log(JSON.stringify(organization, null, 2));
+        } catch (error) {
+          if (axios.isAxiosError(error)) {
+            console.error((error as AxiosError).response?.data);
+          } else {
+            console.error((error as Error).message);
+          }
+        }
+      }
+    )
+    .command(
+      "add-participant-to-organization <baseUrl> <accessToken> <participantId> <organizationId>",
+      "add a todd-coin participant to a todd-coin organization",
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      () => {},
+      async (
+        args: ArgumentsCamelCase<{
+          baseUrl: string;
+          accessToken: string;
+          organizationId: string;
+          participantId: string;
+        }>
+      ) => {
+        try {
+          const baseUrl = args.baseUrl as string;
+          const accessToken = args.accessToken as string;
+          const organizationId = args.organizationId as string;
+          const participantId = args.participantId as string;
+
+          await createOrganizationParticipantReference(
+            baseUrl,
+            accessToken,
+            organizationId,
+            participantId
+          );
+
+          console.log("All Done!");
+        } catch (error) {
+          if (axios.isAxiosError(error)) {
+            console.error((error as AxiosError).response?.data);
+          } else {
+            console.error((error as Error).message);
+          }
+        }
+      }
+    )
+    .command(
+      "add-authorized-signer-to-organization <baseUrl> <accessToken> <authorizedSignerId> <organizationId>",
+      "add a todd-coin authorized signer to a todd-coin organization",
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      () => {},
+      async (
+        args: ArgumentsCamelCase<{
+          baseUrl: string;
+          accessToken: string;
+          organizationId: string;
+          authorizedSignerId: string;
+        }>
+      ) => {
+        try {
+          const baseUrl = args.baseUrl as string;
+          const accessToken = args.accessToken as string;
+          const organizationId = args.organizationId as string;
+          const authorizedSignerId = args.authorizedSignerId as string;
+
+          await createOrganizationAuthorizedSignerReference(
+            baseUrl,
+            accessToken,
+            organizationId,
+            authorizedSignerId
+          );
+
+          console.log("All Done!");
+        } catch (error) {
+          if (axios.isAxiosError(error)) {
+            console.error((error as AxiosError).response?.data);
+          } else {
+            console.error((error as Error).message);
+          }
+        }
+      }
+    )
+    .command(
+      "add-administrator-to-organization <baseUrl> <accessToken> <administratorId> <organizationId>",
+      "add a todd-coin authorized signer to a todd-coin organization",
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      () => {},
+      async (
+        args: ArgumentsCamelCase<{
+          baseUrl: string;
+          accessToken: string;
+          organizationId: string;
+          administratorId: string;
+        }>
+      ) => {
+        try {
+          const baseUrl = args.baseUrl as string;
+          const accessToken = args.accessToken as string;
+          const organizationId = args.organizationId as string;
+          const administratorId = args.administratorId as string;
+
+          await createOrganizationAdministratorReference(
+            baseUrl,
+            accessToken,
+            organizationId,
+            administratorId
+          );
+
+          console.log("All Done!");
         } catch (error) {
           if (axios.isAxiosError(error)) {
             console.error((error as AxiosError).response?.data);
@@ -487,7 +920,7 @@ export const cli = () =>
       }
     )
     .command(
-      "create-pending-transaction <baseUrl> <accessToken> <description> <fromParticipantId> <toParticipantId> <fromTime> <toTime>",
+      "create-time-pending-tx <baseUrl> <accessToken> <description> <fromParticipantId> <fromOrganizaionId> <toParticipantId> <toOrganizaionId> <fromTime> <toTime>",
       "create a pending todd-coin transaction",
       // eslint-disable-next-line @typescript-eslint/no-empty-function
       () => {},
@@ -497,7 +930,9 @@ export const cli = () =>
           accessToken: string;
           description: string;
           fromParticipantId: string;
+          fromOrganizationId: string;
           toParticipantId: string;
+          toOrganizationId: string;
           fromTime: string;
           toTime: string;
         }>
@@ -506,21 +941,58 @@ export const cli = () =>
           const baseUrl = args.baseUrl as string;
           const accessToken = args.accessToken as string;
           const description = args.description as string;
-          const fromParticipantId = args.fromParticipantId as string;
-          const toParticipantId = args.toParticipantId as string;
+          const fromParticipantId =
+            args.fromParticipantId !== "n/a"
+              ? (args.fromParticipantId as string)
+              : undefined;
+          const fromOrganizationId =
+            args.fromOrganizationId !== "n/a"
+              ? (args.fromOrganizationId as string)
+              : undefined;
+          const toParticipantId =
+            args.toParticipantId !== "n/a"
+              ? (args.toParticipantId as string)
+              : undefined;
+          const toOrganizationId =
+            args.toOrganizationId !== "n/a"
+              ? (args.toOrganizationId as string)
+              : undefined;
           const fromTime = args.fromTime as string;
           const toTime = args.toTime as string;
 
           const pendingTransaction: PendingTransaction<TransactionDetails> =
-            await createPendingTransaction(
-              baseUrl,
-              accessToken,
+            await createPendingTransaction(baseUrl, accessToken, {
               description,
-              fromParticipantId,
-              toParticipantId,
-              fromTime,
-              toTime
-            );
+              type: TransactionType.TIME,
+              details: {
+                dateRanges: [
+                  {
+                    from: fromTime,
+                    to: toTime,
+                  },
+                ],
+              },
+              fromParticipant: fromParticipantId
+                ? ({
+                    id: fromParticipantId,
+                  } as Participant)
+                : undefined,
+              fromOrganization: fromOrganizationId
+                ? ({
+                    id: fromOrganizationId,
+                  } as Organization)
+                : undefined,
+              toParticipant: fromParticipantId
+                ? ({
+                    id: toParticipantId,
+                  } as Participant)
+                : undefined,
+              toOrganization: fromOrganizationId
+                ? ({
+                    id: toOrganizationId,
+                  } as Organization)
+                : undefined,
+            });
 
           console.log(JSON.stringify(pendingTransaction, null, 2));
         } catch (error) {
@@ -533,7 +1005,7 @@ export const cli = () =>
       }
     )
     .command(
-      "sign-pending-transaction <baseUrl> <accessToken> <goodPoints> <participantId> <participantKeyId> <privateKey> <pendingTransactionId>",
+      "sign-pending-tx <baseUrl> <accessToken> <goodPoints> <signerParticipantId> <signerParticipantKeyId> <signerPrivateKey> <pendingTransactionId>",
       "sign a pending todd-coin transaction",
       // eslint-disable-next-line @typescript-eslint/no-empty-function
       () => {},
@@ -541,17 +1013,17 @@ export const cli = () =>
         args: ArgumentsCamelCase<{
           baseUrl: string;
           accessToken: string;
-          participantKeyId: string;
-          privateKey: string;
+          signerParticipantKeyId: string;
+          signerPrivateKey: string;
           pendingTransactionId: string;
         }>
       ) => {
         try {
           const baseUrl = args.baseUrl as string;
           const accessToken = args.accessToken as string;
-          const participantId = args.participantId as string;
-          const participantKeyId = args.participantKeyId as string;
-          const privateKey = args.privateKey as string;
+          const signerParticipantId = args.signerParticipantId as string;
+          const signerParticipantKeyId = args.signerParticipantKeyId as string;
+          const signerPrivateKey = args.signerPrivateKey as string;
           const goodPoints = args.goodPoints as number;
           const pendingTransactionId = args.pendingTransactionId as string;
 
@@ -562,25 +1034,26 @@ export const cli = () =>
               pendingTransactionId
             );
 
-          const participant: Participant = await getParticipantById(
+          const signer: Participant = await getParticipantById(
             baseUrl,
             accessToken,
-            participantId
+            signerParticipantId
           );
 
-          const participantKey: ParticipantKey = await getParticipantKeyById(
-            baseUrl,
-            accessToken,
-            participant.id as string,
-            participantKeyId
-          );
+          const signerParticipantKey: ParticipantKey =
+            await getParticipantKeyById(
+              baseUrl,
+              accessToken,
+              signer.id as string,
+              signerParticipantKeyId
+            );
 
           const signedTransaction: SignedTransaction<TransactionDetails> =
             transactionUtils.signTransaction(
               pendingTransaction,
               goodPoints,
-              participantKey,
-              privateKey
+              signerParticipantKey,
+              signerPrivateKey
             );
 
           const createdSignedTransaction: SignedTransaction<TransactionDetails> =
@@ -591,6 +1064,74 @@ export const cli = () =>
             );
 
           console.log(JSON.stringify(createdSignedTransaction, null, 2));
+        } catch (error) {
+          if (axios.isAxiosError(error)) {
+            console.error((error as AxiosError).response?.data);
+          } else {
+            console.error((error as Error).message);
+          }
+        }
+      }
+    )
+    .command(
+      "update-signed-tx <baseUrl> <accessToken> <goodPoints> <signerParticipantId> <signerParticipantKeyId> <signerPrivateKey> <signedTransactionId>",
+      "sign a pending todd-coin transaction",
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      () => {},
+      async (
+        args: ArgumentsCamelCase<{
+          baseUrl: string;
+          accessToken: string;
+          signerParticipantKeyId: string;
+          signerPrivateKey: string;
+          signedTransactionId: string;
+        }>
+      ) => {
+        try {
+          const baseUrl = args.baseUrl as string;
+          const accessToken = args.accessToken as string;
+          const signerParticipantId = args.signerParticipantId as string;
+          const signerParticipantKeyId = args.signerParticipantKeyId as string;
+          const signerPrivateKey = args.signerPrivateKey as string;
+          const goodPoints = args.goodPoints as number;
+          const signedTransactionId = args.signedTransactionId as string;
+
+          const existingSignedTransaction: SignedTransaction<TransactionDetails> =
+            await getSignedTransactionById(
+              baseUrl,
+              accessToken,
+              signedTransactionId
+            );
+
+          const signer: Participant = await getParticipantById(
+            baseUrl,
+            accessToken,
+            signerParticipantId
+          );
+
+          const signerParticipantKey: ParticipantKey =
+            await getParticipantKeyById(
+              baseUrl,
+              accessToken,
+              signer.id as string,
+              signerParticipantKeyId
+            );
+
+          const updatedSignedTransaction: SignedTransaction<TransactionDetails> =
+            transactionUtils.signTransaction(
+              existingSignedTransaction,
+              goodPoints,
+              signerParticipantKey,
+              signerPrivateKey
+            );
+
+          await updateSignedTransaction(
+            baseUrl,
+            accessToken,
+            updatedSignedTransaction
+          );
+
+          console.log("All Done!");
         } catch (error) {
           if (axios.isAxiosError(error)) {
             console.error((error as AxiosError).response?.data);
