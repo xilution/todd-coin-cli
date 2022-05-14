@@ -1,6 +1,5 @@
 # Todd Coin Quick Start
 
-
 todo - add psql and or curl commands to view database/api effects
 
 ## Prerequisites
@@ -132,6 +131,7 @@ export TODD_COIN_EDUCATOR_ACCESS_TOKEN=`cat ~/.todd-coin/quick-start/charity-acc
 ```
 
 ## Create the Carefree Elementary (a Todd Coin Organization)
+
 ```
 
 todd-coin create-organization \
