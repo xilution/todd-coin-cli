@@ -430,8 +430,6 @@ const getPendingTransactionById = async (
     }
   );
 
-  // todo - conditionally get if the id is defined
-
   const fromParticipantId = (
     response.data.data.relationships.fromParticipant
       ?.data as ApiData<Participant>
@@ -516,8 +514,6 @@ const getSignedTransactionById = async (
       },
     }
   );
-
-  // todo - conditionally get if the id is defined
 
   const fromParticipantId = (
     response.data.data.relationships.fromParticipant
