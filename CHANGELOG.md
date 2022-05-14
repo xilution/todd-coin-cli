@@ -1,3 +1,10 @@
+## [1.5.1](https://github.com/xilution/todd-coin-cli/compare/v1.5.0...v1.5.1) (2022-05-14)
+
+
+### Bug Fixes
+
+* fixed signing transactions ([68d5ba5](https://github.com/xilution/todd-coin-cli/commit/68d5ba52b2c71959e6fe2771acec163ed8e90ee2))
+
 # [1.5.0](https://github.com/xilution/todd-coin-cli/compare/v1.4.0...v1.5.0) (2022-05-10)
 
 
