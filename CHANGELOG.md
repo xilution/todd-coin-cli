@@ -1,3 +1,10 @@
+# [1.6.0](https://github.com/xilution/todd-coin-cli/compare/v1.5.1...v1.6.0) (2022-05-18)
+
+
+### Features
+
+* removed authentication for gets ([5b6b1e5](https://github.com/xilution/todd-coin-cli/commit/5b6b1e567828282093eb0dafb21b1384a9ef63d8))
+
 ## [1.5.1](https://github.com/xilution/todd-coin-cli/compare/v1.5.0...v1.5.1) (2022-05-14)
 
 

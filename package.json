@@ -1,6 +1,6 @@
 {
   "name": "@xilution/todd-coin-cli",
-  "version": "1.5.1",
+  "version": "1.6.0",
   "description": "The Todd Coin Cryptocurrency CLI",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",
