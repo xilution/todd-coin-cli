@@ -42,7 +42,6 @@ const getAccessToken = async (
 
 const getBlockTransactions = async (
   baseUrl: string,
-  accessToken: string,
   blockId: string,
   startingPage: number = FIRST_PAGE
 ): Promise<BlockTransaction<TransactionDetails>[]> => {
@@ -57,11 +56,7 @@ const getBlockTransactions = async (
       links: {
         next: string;
       };
-    }> = await axios.get(nextUrl, {
-      headers: {
-        authorization: `bearer ${accessToken}`,
-      },
-    });
+    }> = await axios.get(nextUrl);
 
     const someTransactions = response.data.data.map(
       (transactionData: ApiData<BlockTransaction<TransactionDetails>>) => ({
@@ -84,7 +79,6 @@ const getBlockTransactions = async (
 
 const getBlocks = async (
   baseUrl: string,
-  accessToken: string,
   startingPage: number = FIRST_PAGE
 ): Promise<Block[]> => {
   let blocks: Block[] = [];
@@ -98,16 +92,12 @@ const getBlocks = async (
       links: {
         next: string;
       };
-    }> = await axios.get(nextUrl, {
-      headers: {
-        authorization: `bearer ${accessToken}`,
-      },
-    });
+    }> = await axios.get(nextUrl);
 
     const someBlocks = (await Promise.all(
       response.data.data.map(async (blockData: ApiData<Block>) => {
         const transactions: BlockTransaction<TransactionDetails>[] =
-          await getBlockTransactions(baseUrl, accessToken, blockData.id);
+          await getBlockTransactions(baseUrl, blockData.id);
 
         return {
           ...blockData.attributes,
@@ -260,15 +250,10 @@ const createOrganizationAdministratorReference = async (
 
 const getParticipantById = async (
   baseUrl: string,
-  accessToken: string,
   participantId: string
 ): Promise<Participant> => {
   const response: AxiosResponse<{ data: ApiData<Participant> }> =
-    await axios.get(`${baseUrl}/participants/${participantId}`, {
-      headers: {
-        authorization: `bearer ${accessToken}`,
-      },
-    });
+    await axios.get(`${baseUrl}/participants/${participantId}`);
 
   return {
     id: response.data.data.id,
@@ -278,15 +263,10 @@ const getParticipantById = async (
 
 const getOrganizationById = async (
   baseUrl: string,
-  accessToken: string,
   organizationId: string
 ): Promise<Organization> => {
   const response: AxiosResponse<{ data: ApiData<Organization> }> =
-    await axios.get(`${baseUrl}/organizations/${organizationId}`, {
-      headers: {
-        authorization: `bearer ${accessToken}`,
-      },
-    });
+    await axios.get(`${baseUrl}/organizations/${organizationId}`);
 
   return {
     id: response.data.data.id,
@@ -296,18 +276,12 @@ const getOrganizationById = async (
 
 const getParticipantKeyById = async (
   baseUrl: string,
-  accessToken: string,
   participantId: string,
   participantKeyId: string
 ): Promise<ParticipantKey> => {
   const response: AxiosResponse<{ data: ApiData<ParticipantKey> }> =
     await axios.get(
-      `${baseUrl}/participants/${participantId}/keys/${participantKeyId}`,
-      {
-        headers: {
-          authorization: `bearer ${accessToken}`,
-        },
-      }
+      `${baseUrl}/participants/${participantId}/keys/${participantKeyId}`
     );
 
   return {
@@ -416,18 +390,12 @@ const createPendingTransaction = async (
 
 const getPendingTransactionById = async (
   baseUrl: string,
-  accessToken: string,
   pendingTransactionId: string
 ): Promise<PendingTransaction<TransactionDetails>> => {
   const response: AxiosResponse<{
     data: ApiData<PendingTransaction<TransactionDetails>>;
   }> = await axios.get(
-    `${baseUrl}/pending-transactions/${pendingTransactionId}`,
-    {
-      headers: {
-        authorization: `bearer ${accessToken}`,
-      },
-    }
+    `${baseUrl}/pending-transactions/${pendingTransactionId}`
   );
 
   const fromParticipantId = (
@@ -438,11 +406,7 @@ const getPendingTransactionById = async (
   let fromParticipant: Participant | undefined;
 
   if (fromParticipantId) {
-    fromParticipant = await getParticipantById(
-      baseUrl,
-      accessToken,
-      fromParticipantId
-    );
+    fromParticipant = await getParticipantById(baseUrl, fromParticipantId);
   }
 
   const fromOrganizationId = (
@@ -453,11 +417,7 @@ const getPendingTransactionById = async (
   let fromOrganization: Organization | undefined;
 
   if (fromOrganizationId) {
-    fromOrganization = await getOrganizationById(
-      baseUrl,
-      accessToken,
-      fromOrganizationId
-    );
+    fromOrganization = await getOrganizationById(baseUrl, fromOrganizationId);
   }
 
   const toParticipantId = (
@@ -467,11 +427,7 @@ const getPendingTransactionById = async (
   let toParticipant: Participant | undefined;
 
   if (toParticipantId) {
-    toParticipant = await getParticipantById(
-      baseUrl,
-      accessToken,
-      toParticipantId
-    );
+    toParticipant = await getParticipantById(baseUrl, toParticipantId);
   }
 
   const toOrganizationId = (
@@ -482,11 +438,7 @@ const getPendingTransactionById = async (
   let toOrganization: Organization | undefined;
 
   if (toOrganizationId) {
-    toOrganization = await getOrganizationById(
-      baseUrl,
-      accessToken,
-      toOrganizationId
-    );
+    toOrganization = await getOrganizationById(baseUrl, toOrganizationId);
   }
 
   return {
@@ -501,19 +453,11 @@ const getPendingTransactionById = async (
 
 const getSignedTransactionById = async (
   baseUrl: string,
-  accessToken: string,
   signedTransactionId: string
 ): Promise<SignedTransaction<TransactionDetails>> => {
   const response: AxiosResponse<{
     data: ApiData<SignedTransaction<TransactionDetails>>;
-  }> = await axios.get(
-    `${baseUrl}/signed-transactions/${signedTransactionId}`,
-    {
-      headers: {
-        authorization: `bearer ${accessToken}`,
-      },
-    }
-  );
+  }> = await axios.get(`${baseUrl}/signed-transactions/${signedTransactionId}`);
 
   const fromParticipantId = (
     response.data.data.relationships.fromParticipant
@@ -523,11 +467,7 @@ const getSignedTransactionById = async (
   let fromParticipant: Participant | undefined;
 
   if (fromParticipantId) {
-    fromParticipant = await getParticipantById(
-      baseUrl,
-      accessToken,
-      fromParticipantId
-    );
+    fromParticipant = await getParticipantById(baseUrl, fromParticipantId);
   }
 
   const fromOrganizationId = (
@@ -538,11 +478,7 @@ const getSignedTransactionById = async (
   let fromOrganization: Organization | undefined;
 
   if (fromOrganizationId) {
-    fromOrganization = await getOrganizationById(
-      baseUrl,
-      accessToken,
-      fromOrganizationId
-    );
+    fromOrganization = await getOrganizationById(baseUrl, fromOrganizationId);
   }
 
   const toParticipantId = (
@@ -552,11 +488,7 @@ const getSignedTransactionById = async (
   let toParticipant: Participant | undefined;
 
   if (toParticipantId) {
-    toParticipant = await getParticipantById(
-      baseUrl,
-      accessToken,
-      toParticipantId
-    );
+    toParticipant = await getParticipantById(baseUrl, toParticipantId);
   }
 
   const toOrganizationId = (
@@ -567,11 +499,7 @@ const getSignedTransactionById = async (
   let toOrganization: Organization | undefined;
 
   if (toOrganizationId) {
-    toOrganization = await getOrganizationById(
-      baseUrl,
-      accessToken,
-      toOrganizationId
-    );
+    toOrganization = await getOrganizationById(baseUrl, toOrganizationId);
   }
 
   return {
@@ -1024,22 +952,16 @@ export const cli = () =>
           const pendingTransactionId = args.pendingTransactionId as string;
 
           const pendingTransaction: PendingTransaction<TransactionDetails> =
-            await getPendingTransactionById(
-              baseUrl,
-              accessToken,
-              pendingTransactionId
-            );
+            await getPendingTransactionById(baseUrl, pendingTransactionId);
 
           const signer: Participant = await getParticipantById(
             baseUrl,
-            accessToken,
             signerParticipantId
           );
 
           const signerParticipantKey: ParticipantKey =
             await getParticipantKeyById(
               baseUrl,
-              accessToken,
               signer.id as string,
               signerParticipantKeyId
             );
@@ -1093,22 +1015,16 @@ export const cli = () =>
           const signedTransactionId = args.signedTransactionId as string;
 
           const existingSignedTransaction: SignedTransaction<TransactionDetails> =
-            await getSignedTransactionById(
-              baseUrl,
-              accessToken,
-              signedTransactionId
-            );
+            await getSignedTransactionById(baseUrl, signedTransactionId);
 
           const signer: Participant = await getParticipantById(
             baseUrl,
-            accessToken,
             signerParticipantId
           );
 
           const signerParticipantKey: ParticipantKey =
             await getParticipantKeyById(
               baseUrl,
-              accessToken,
               signer.id as string,
               signerParticipantKeyId
             );
@@ -1138,7 +1054,7 @@ export const cli = () =>
       }
     )
     .command(
-      "validate <baseUrl> <accessToken>",
+      "validate <baseUrl>",
       "validate todd-coin",
       // eslint-disable-next-line @typescript-eslint/no-empty-function
       () => {},
@@ -1150,8 +1066,7 @@ export const cli = () =>
       ) => {
         try {
           const baseUrl = args.baseUrl as string;
-          const accessToken = args.accessToken as string;
-          const blocks: Block[] = await getBlocks(baseUrl, accessToken);
+          const blocks: Block[] = await getBlocks(baseUrl);
           const isValid: boolean = blockchainUtils.isChainValid(blocks);
 
           if (isValid) {
@@ -1170,7 +1085,7 @@ export const cli = () =>
       }
     )
     .command(
-      "get-balance <baseUrl> <accessToken> <participantId>",
+      "get-balance <baseUrl> <participantId>",
       "get todd-coin participant balance",
       // eslint-disable-next-line @typescript-eslint/no-empty-function
       () => {},
@@ -1183,14 +1098,12 @@ export const cli = () =>
       ) => {
         try {
           const baseUrl = args.baseUrl as string;
-          const accessToken = args.accessToken as string;
           const participantId = args.participantId as string;
           const participant: Participant = await getParticipantById(
             baseUrl,
-            accessToken,
             participantId
           );
-          const blocks: Block[] = await getBlocks(baseUrl, accessToken);
+          const blocks: Block[] = await getBlocks(baseUrl);
           const balance: number =
             participantUtils.calculateAccumulatedGoodPoints(
               participant,
