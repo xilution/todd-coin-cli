@@ -1,3 +1,10 @@
+# [1.7.0](https://github.com/xilution/todd-coin-cli/compare/v1.6.0...v1.7.0) (2022-06-07)
+
+
+### Features
+
+* bumped todd-coin-utils version ([6e3aeae](https://github.com/xilution/todd-coin-cli/commit/6e3aeae02dff4f8928b865944740c35a1f980ce3))
+
 # [1.6.0](https://github.com/xilution/todd-coin-cli/compare/v1.5.1...v1.6.0) (2022-05-18)
 
 
