@@ -16,6 +16,7 @@ Created and Tested on Mac.
 mkdir -p ~/.todd-coin/quick-start
 
 export TODD_COIN_API_BASE_URL=http://localhost:3000
+
 ```
 
 ## Start the Todd Coin Data Base
@@ -28,6 +29,7 @@ docker run --name todd-coin-db \
     -d docker.io/library/postgres:latest
 
 docker logs -f todd-coin-db
+
 ```
 
 Wait for "database system is ready to accept connections". Use ctrl-c to exit.
@@ -38,6 +40,7 @@ Wait for "database system is ready to accept connections". Use ctrl-c to exit.
 docker run --rm --name todd-coin-tasks \
     -e OPERATION=INIT -e DB_HOST=host.docker.internal \
     docker.io/xilution/todd-coin-tasks:latest
+
 ```
 
 ## Set Up Task Aliases
@@ -51,6 +54,7 @@ alias todd-coin-sync="docker run --rm --name todd-coin-tasks  \
 
 alias todd-coin-mine="docker run --rm --name todd-coin-tasks  \
     -e OPERATION=MINE -e DB_HOST=host.docker.internal docker.io/xilution/todd-coin-tasks:latest"
+
 ```
 
 ## Run Through the Todd Coin Tasks
@@ -65,6 +69,7 @@ todd-coin-validate
 todd-coin-mine
 
 todd-coin-validate
+
 ```
 
 ## Start the Todd Coin API
@@ -76,6 +81,7 @@ docker run --name todd-coin-api \
     -d docker.io/xilution/todd-coin-api:latest
 
 docker logs -f todd-coin-api
+
 ```
 
 Wait for "Listening on 0.0.0.0:3000". Use ctrl-c to exit.
@@ -84,18 +90,21 @@ Wait for "Listening on 0.0.0.0:3000". Use ctrl-c to exit.
 
 ```
 open $TODD_COIN_API_BASE_URL
+
 ```
 
 check out the api root response
 
 ```
 open $TODD_COIN_API_BASE_URL/documentation
+
 ```
 
 check out the api documentation
 
 ```
 open $TODD_COIN_API_BASE_URL/metrics
+
 ```
 
 check out the api metrics (Prometheus ready)
@@ -104,7 +113,19 @@ check out the api metrics (Prometheus ready)
 
 ```
 npm i -g @xilution/todd-coin-cli@latest
+
+todd-coin --version
+
 ```
+
+check out the todd-coin cli version
+
+```
+todd-coin --help
+
+```
+
+check out the todd-coin cli options
 
 ## Create an Educator (a Todd Coin Participant)
 
@@ -128,6 +149,7 @@ todd-coin get-access-token \
     > ~/.todd-coin/quick-start/charity-access-token.json && cat ~/.todd-coin/quick-start/charity-access-token.json
 
 export TODD_COIN_EDUCATOR_ACCESS_TOKEN=`cat ~/.todd-coin/quick-start/charity-access-token.json | jq '.access' -r`
+
 ```
 
 ## Create the Carefree Elementary (a Todd Coin Organization)
@@ -159,9 +181,10 @@ todd-coin add-administrator-to-organization \
     $TODD_COIN_EDUCATOR_ACCESS_TOKEN \
     $TODD_COIN_EDUCATOR_ID \
     $TODD_COIN_CAREFREE_ELEMENTARY_ID
+
 ```
 
-## Volunteer (Another Todd Coin Participant)
+## Create a Volunteer (Another Todd Coin Participant)
 
 ```
 todd-coin create-participant \
@@ -179,12 +202,14 @@ todd-coin get-access-token \
     > ~/.todd-coin/quick-start/volunteer-access-token.json && cat ~/.todd-coin/quick-start/volunteer-access-token.json
 
 export TODD_COIN_VOLUNTEER_ACCESS_TOKEN=`cat ~/.todd-coin/quick-start/volunteer-access-token.json | jq '.access' -r`
+
 ```
 
 ## Check Out all the Environment Variables You've Created
 
 ```
 env | grep TODD_COIN
+
 ```
 
 ## Create a Pending Transaction
@@ -207,12 +232,14 @@ todd-coin create-time-pending-tx \
     > ~/.todd-coin/quick-start/pending-tx-1.json && cat ~/.todd-coin/quick-start/pending-tx-1.json
 
 export TODD_COIN_PENDING_TRANSACTION_1_ID=`cat ~/.todd-coin/quick-start/pending-tx-1.json | jq '.id' -r`
+
 ```
 
 ## Quick Validation
 
 ```
 todd-coin-validate
+
 ```
 
 ## Create a Signed Transaction
@@ -229,6 +256,7 @@ todd-coin sign-pending-tx \
     > ~/.todd-coin/quick-start/signed-tx-1.json && cat ~/.todd-coin/quick-start/signed-tx-1.json
 
 export TODD_COIN_SIGNED_TRANSACTION_1_ID=`cat ~/.todd-coin/quick-start/signed-tx-1.json | jq '.id' -r`
+
 ```
 
 ## Update the Signed Transaction
@@ -241,8 +269,8 @@ todd-coin update-signed-tx \
     $TODD_COIN_EDUCATOR_ID \
     $TODD_COIN_EDUCATOR_KEY_ID \
     $TODD_COIN_EDUCATOR_PRIVATE_KEY \
-    $TODD_COIN_PENDING_TRANSACTION_1_ID \
-    > ~/.todd-coin/quick-start/signed-tx-1.json && cat ~/.todd-coin/quick-start/signed-tx-1.json
+    $TODD_COIN_PENDING_TRANSACTION_1_ID
+
 ```
 
 # Run Through the Todd Coin Tasks
@@ -257,6 +285,7 @@ todd-coin-validate
 todd-coin-sync
 
 todd-coin-validate
+
 ```
 
 ## Clean Up
@@ -273,4 +302,5 @@ docker stop todd-coin-db todd-coin-api
 docker rm todd-coin-db todd-coin-api
 
 rm -rf ~/.todd-coin/quick-start
+
 ```
