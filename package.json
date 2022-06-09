@@ -36,7 +36,7 @@
   "dependencies": {
     "@xilution/todd-coin-constants": "^2.1.0",
     "@xilution/todd-coin-types": "^4.0.0",
-    "@xilution/todd-coin-utils": "^7.3.1",
+    "@xilution/todd-coin-utils": "^7.3.2",
     "axios": "^0.26.1",
     "lodash": "^4.17.21",
     "uuid": "^8.3.2",
